@@ -1,47 +1,57 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { onMounted, ref } from 'vue'
+import { remult, type ErrorInfo } from 'remult';
+import { Task } from './shared/Task';
+import { TasksController } from './shared/TasksController';
+
+const taskRepo = remult.repo(Task);
+const tasks = ref<(Task & { error?: ErrorInfo<Task> })[]>([]);
+const hideCompleted = ref(false);
+async function fetchTasks() {
+  tasks.value = await taskRepo.find({
+    limit: 20,
+    orderBy: { completed: "asc" },
+    where: { completed: hideCompleted.value ? false : undefined }
+  });
+}
+async function saveTask(task: (Task & { error?: ErrorInfo<Task> })) {
+  try {
+    const savedTask = await taskRepo.save(task);
+    tasks.value = tasks.value.map(t => t === task ? savedTask : t);
+  } catch (error: any) {
+    alert(error.message);
+    task.error = error;
+  }
+}
+function addTask() {
+  tasks.value.push(new Task());
+}
+async function deleteTask(task: Task) {
+  await taskRepo.delete(task);
+  tasks.value = tasks.value.filter(t => t !== task);
+}
+async function setAll(completed: boolean) {
+  await TasksController.setAll(completed);
+  fetchTasks();
+}
+onMounted(() => fetchTasks())
 </script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div>
+    <input type="checkbox" v-model="hideCompleted" @change="fetchTasks()" /> Hide Completed
+    <main>
+      <div v-for="task in tasks">
+        <input type="checkbox" v-model="task.completed" />
+        <input v-model="task.title" />
+        <button @click="saveTask(task)">Save</button>
+        <button @click="deleteTask(task)">Delete</button>
+        <span>{{ task.error?.modelState?.title }}</span>
+      </div>
+    </main>
+    <button @click="addTask()">Add Task</button>
+    <div>
+     <button @click="setAll(true)">Set all as completed</button>
+     <button @click="setAll(false)">Set all as uncompleted</button>
+   </div>
+  </div>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
