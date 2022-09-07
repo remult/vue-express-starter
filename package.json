@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "express": "^4.18.1",
-    "remult": "^0.16.0-exp.19",
+    "remult": "^0.16.0",
     "vue": "^3.2.38"
   },
   "devDependencies": {
