@@ -1,3 +1,3 @@
-import { remultExpress } from 'remult/remult-express';
+import { remultExpress } from "remult/remult-express"
 
-export const api = remultExpress();
+export const api = remultExpress()
