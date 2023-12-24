@@ -4,4 +4,5 @@ import { api } from "./api"
 const app = express()
 app.use(api)
 
+app.get("*", (req, res) => res.send(`api Server - path: "${req.path}"`))
 app.listen(3002, () => console.log("Server started"))
